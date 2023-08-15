@@ -5,15 +5,14 @@ const Joi = require("joi");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-	const contacts = await contactFunctions.listContacts();
-	const parsedContacts = JSON.parse(contacts);
-	res.json({ status: "success", code: 200, data: parsedContacts });
+	const contacts = await contactFunctions.getContacts();
+	res.json({ status: "success", code: 200, data: contacts });
 });
 
 router.get("/:contactId", async (req, res) => {
 	const { contactId } = req.params;
 	const contact = await contactFunctions.getContactById(contactId);
-	if (contact.length > 0) {
+	if (contact) {
 		res.json({ status: "success", code: 200, data: contact });
 	} else {
 		res.json({ message: "Not found" });
