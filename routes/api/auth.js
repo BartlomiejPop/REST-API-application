@@ -1,4 +1,3 @@
-const bcrypt = require("bcryptjs");
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const passport = require("passport");
@@ -8,6 +7,7 @@ const router = express.Router();
 
 const auth = (req, res, next) => {
 	passport.authenticate("jwt", { session: false }, (err, user) => {
+		console.log(user);
 		if (!user || err) {
 			return res.status(401).json({
 				status: "error",
@@ -73,8 +73,7 @@ router.post("/users/login", async (req, res, next) => {
 			username: user.username,
 		};
 
-		const token = jwt.sign(payload, secret, { expiresIn: "1h" });
-		console.log(token);
+		const token = jwt.sign(payload, "secret", { expiresIn: "1h" });
 		return res.json({
 			status: "success",
 			code: 200,
@@ -98,9 +97,11 @@ router.post("/users/login", async (req, res, next) => {
 router.get("/users/logout", auth, async (req, res, next) => {
 	const { id } = jwt.decode(token);
 	const user = await User.findOne({ id });
+	console.log(id);
 	if (user) {
 		return res.json({
 			code: 204,
+			status: "Logged out",
 		});
 	}
 	return res.json({
