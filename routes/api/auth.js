@@ -2,12 +2,15 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const passport = require("passport");
 const User = require("../../service/schemas/user");
+const strategy = require("../../config/config-passport");
+require("dotenv").config();
+let token;
 
 const router = express.Router();
+const secret = process.env.SECRET;
 
 const auth = (req, res, next) => {
-	passport.authenticate("jwt", { session: false }, (err, user) => {
-		console.log(user);
+	passport.authenticate("jwt", (err, user) => {
 		if (!user || err) {
 			return res.status(401).json({
 				status: "error",
@@ -73,7 +76,7 @@ router.post("/users/login", async (req, res, next) => {
 			username: user.username,
 		};
 
-		const token = jwt.sign(payload, "secret", { expiresIn: "1h" });
+		token = jwt.sign(payload, secret, { expiresIn: "1h" });
 		return res.json({
 			status: "success",
 			code: 200,
@@ -95,9 +98,8 @@ router.post("/users/login", async (req, res, next) => {
 });
 
 router.get("/users/logout", auth, async (req, res, next) => {
-	const { id } = jwt.decode(token);
+	const { id } = req.user;
 	const user = await User.findOne({ id });
-	console.log(id);
 	if (user) {
 		return res.json({
 			code: 204,
@@ -115,13 +117,25 @@ router.get("/users/logout", auth, async (req, res, next) => {
 
 router.get("/users/current", auth, async (req, res, next) => {
 	try {
-		const { username } = req.user;
-		res.json({
-			code: 200,
-			status: OK,
+		console.log("token", token);
+		const { id } = jwt.decode(token);
+		const user = await User.findOne({ id });
+		if (user) {
+			return res.json({
+				code: 200,
+				status: OK,
+				ResponseBody: {
+					email: "example@example.com",
+					subscription: "starter",
+				},
+			});
+		}
+		return res.json({
+			code: 400,
+			Status: "Unauthorized",
+			ContentType: application / json,
 			ResponseBody: {
-				email: "example@example.com",
-				subscription: "starter",
+				message: "Bad request",
 			},
 		});
 	} catch (err) {
