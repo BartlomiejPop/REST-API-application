@@ -77,6 +77,22 @@ router.post("/users/login", async (req, res, next) => {
 		};
 
 		token = jwt.sign(payload, secret, { expiresIn: "1h" });
+		console.log(token);
+		// User.findOneAndUpdate(
+		// 	{ username: username },
+		// 	{ token: token },
+		// 	{ new: true },
+		// 	(err, user) => {
+		// 		if (err) {
+		// 			return res
+		// 				.status(500)
+		// 				.json({ error: "Błąd zapisu tokena w bazie danych." });
+		// 		}
+		// 		return res
+		// 			.status(200)
+		// 			.json({ message: "Zapisano token JWT w bazie danych." });
+		// 	}
+		// );
 		return res.json({
 			status: "success",
 			code: 200,
