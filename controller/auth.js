@@ -73,6 +73,9 @@ const login = async (req, res) => {
 		};
 
 		token = jwt.sign(payload, secret, { expiresIn: "1h" });
+		user.token = token;
+		await user.save();
+
 		return res.status(200).json({
 			status: "success",
 			code: 200,
@@ -96,53 +99,45 @@ const login = async (req, res) => {
 const logout = async (req, res) => {
 	const { _id } = req.user;
 	const user = await User.findById(_id);
-	if (user) {
-		await User.findByIdAndRemove(_id);
+	if (user.token) {
+		user.token = "";
+		await user.save();
 		return res.status(200).json({
 			code: 204,
 			status: "Logged out",
 		});
 	}
-	return res.status(401).json({
-		status: "Unauthorized",
-		code: 401,
+	return res.status(400).json({
+		code: 400,
+		Status: "Bad request",
+		ContentType: "application / json",
 		ResponseBody: {
-			message: "Not authorized",
+			message: "Bad request",
 		},
 	});
 };
 
 const current = async (req, res) => {
-	try {
-		const { _id } = req.user;
-		const user = await User.findById(_id);
-		if (user) {
-			return res.status(200).json({
-				code: 200,
-				status: "OK",
-				ResponseBody: {
-					email: user.email,
-					subscription: user.subscription,
-				},
-			});
-		}
-		return res.status(400).json({
-			code: 400,
-			Status: "Unauthorized",
-			ContentType: "application / json",
+	const { _id } = req.user;
+	const user = await User.findById(_id);
+	if (user.token) {
+		return res.status(200).json({
+			code: 200,
+			status: "OK",
 			ResponseBody: {
-				message: "Bad request",
-			},
-		});
-	} catch (err) {
-		return res.status(401).json({
-			status: "Unauthorized",
-			code: 401,
-			ResponseBody: {
-				message: "Not authorized",
+				email: user.email,
+				subscription: user.subscription,
 			},
 		});
 	}
+	return res.status(400).json({
+		code: 400,
+		Status: "Bad request",
+		ContentType: "application / json",
+		ResponseBody: {
+			message: "Bad request",
+		},
+	});
 };
 
 module.exports = {
