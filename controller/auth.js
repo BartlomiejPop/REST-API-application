@@ -1,6 +1,9 @@
 const jwt = require("jsonwebtoken");
 const passport = require("../config/config-passport");
+const gravatar = require("gravatar");
 const User = require("../service/schemas/user");
+const multer = require("multer");
+// const gravatarUrl = require("gravatar-url");
 require("dotenv").config();
 let token;
 const secret = process.env.SECRET;
@@ -32,7 +35,8 @@ const signup = async (req, res, next) => {
 		});
 	}
 	try {
-		const newUser = new User({ username, email });
+		const avatarURL = gravatar.url(email, { s: "200", d: "identicon" });
+		const newUser = new User({ username, email, avatarURL });
 		newUser.setPassword(password);
 		await newUser.save();
 		return res.status(201).json({
@@ -118,6 +122,7 @@ const logout = async (req, res) => {
 };
 
 const current = async (req, res) => {
+	console.log(req.user);
 	const { _id } = req.user;
 	const user = await User.findById(_id);
 	if (user.token) {

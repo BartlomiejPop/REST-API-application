@@ -1,4 +1,28 @@
 const service = require("../service/index");
+const multer = require("multer");
+const path = require("path");
+const uploadDir = path.join(process.cwd(), "uploads");
+const storeImage = path.join(process.cwd(), "images");
+const fs = require("fs");
+const Jimp = require("jimp");
+const User = require("../service/schemas/user");
+require("dotenv").config();
+
+const storage = multer.diskStorage({
+	destination: (req, file, cb) => {
+		cb(null, uploadDir);
+	},
+	filename: (req, file, cb) => {
+		cb(null, file.originalname);
+	},
+	limits: {
+		fileSize: 1048576,
+	},
+});
+
+const upload = multer({
+	storage: storage,
+});
 
 const get = async (_, res, next) => {
 	try {
@@ -141,6 +165,36 @@ const patch = async (req, res, next) => {
 	}
 };
 
+const avatar = async (req, res, next) => {
+	const { description } = req.body;
+	const { path: temporaryName, originalname } = req.file;
+	const fileName = path.join(storeImage, originalname);
+	try {
+		await fs.rename(temporaryName, fileName);
+	} catch (err) {
+		await fs.unlink(temporaryName);
+		return next(err);
+	}
+	res.json({
+		description,
+		message: "Plik załadowany pomyślnie",
+		status: 200,
+	});
+};
+
+const isAccessible = (path) => {
+	return fs
+		.access(path)
+		.then(() => true)
+		.catch(() => false);
+};
+
+const createFolderIsNotExist = async (folder) => {
+	if (!(await isAccessible(folder))) {
+		await fs.mkdir(folder);
+	}
+};
+
 module.exports = {
 	get,
 	getById,
@@ -148,4 +202,5 @@ module.exports = {
 	update,
 	remove,
 	patch,
+	avatar,
 };
