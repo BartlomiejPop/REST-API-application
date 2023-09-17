@@ -2,8 +2,6 @@ const jwt = require("jsonwebtoken");
 const passport = require("../config/config-passport");
 const gravatar = require("gravatar");
 const User = require("../service/schemas/user");
-const multer = require("multer");
-// const gravatarUrl = require("gravatar-url");
 require("dotenv").config();
 let token;
 const secret = process.env.SECRET;
@@ -122,7 +120,6 @@ const logout = async (req, res) => {
 };
 
 const current = async (req, res) => {
-	console.log(req.user);
 	const { _id } = req.user;
 	const user = await User.findById(_id);
 	if (user.token) {

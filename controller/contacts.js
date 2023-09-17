@@ -1,28 +1,9 @@
 const service = require("../service/index");
-const multer = require("multer");
 const path = require("path");
-const uploadDir = path.join(process.cwd(), "uploads");
-const storeImage = path.join(process.cwd(), "images");
 const fs = require("fs");
 const Jimp = require("jimp");
 const User = require("../service/schemas/user");
 require("dotenv").config();
-
-const storage = multer.diskStorage({
-	destination: (req, file, cb) => {
-		cb(null, uploadDir);
-	},
-	filename: (req, file, cb) => {
-		cb(null, file.originalname);
-	},
-	limits: {
-		fileSize: 1048576,
-	},
-});
-
-const upload = multer({
-	storage: storage,
-});
 
 const get = async (_, res, next) => {
 	try {
@@ -165,11 +146,10 @@ const patch = async (req, res, next) => {
 	}
 };
 
-const avatar = async (req, res, next) => {
+const avatar = async (req, res) => {
 	try {
-		console.log("test");
-		const { token } = req.user;
 		const { file } = req;
+		const { id } = req.user;
 
 		if (!file) {
 			return res.status(400).json({
@@ -177,34 +157,15 @@ const avatar = async (req, res, next) => {
 				message: "Avatar file is required.",
 			});
 		}
-
-		// Tworzenie ścieżki do folderu tmp i folderu avatars w public
 		const tmpDir = path.join(__dirname, "..", "tmp");
 		const avatarsDir = path.join(__dirname, "..", "public", "avatars");
-
-		// Tworzenie unikalnej nazwy pliku
 		const uniqueFileName = `${Date.now()}-${file.originalname}`;
-
-		// Ścieżka do tymczasowego pliku
 		const tmpFilePath = path.join(tmpDir, uniqueFileName);
-
-		// Ścieżka do docelowego pliku w folderze avatars
 		const avatarFilePath = path.join(avatarsDir, uniqueFileName);
-		console.log(tmpFilePath);
-
-		// Odczyt awatara za pomocą Jimp i przetworzenie go na wymiary 250x250
-		// console.log(await Jimp.read(file.path));
-		// const avatar = await Jimp.read(file.path);
-
-		// await avatar.resize(250, 250).quality(80);
-
-		// // Zapisz przetworzony awatar do folderu tmp
-		// await avatar.writeAsync(tmpFilePath);
-
-		// Przenieś awatar do folderu public/avatars
+		const avatar = await Jimp.read(file.path);
+		avatar.resize(250, 250).quality(80);
+		await avatar.writeAsync(tmpFilePath);
 		fs.renameSync(tmpFilePath, avatarFilePath);
-
-		// Aktualizuj pole avatarURL w bazie danych
 		const user = await User.findByIdAndUpdate(id, {
 			avatarURL: `/avatars/${uniqueFileName}`,
 		});
@@ -229,19 +190,6 @@ const avatar = async (req, res, next) => {
 			message: "Avatar update failed.",
 			error: error.message,
 		});
-	}
-};
-
-const isAccessible = (path) => {
-	return fs
-		.access(path)
-		.then(() => true)
-		.catch(() => false);
-};
-
-const createFolderIsNotExist = async (folder) => {
-	if (!(await isAccessible(folder))) {
-		await fs.mkdir(folder);
 	}
 };
 
