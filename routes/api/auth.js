@@ -6,11 +6,11 @@ const ctrlAuth = require("../../controller/auth");
 const ctrlContact = require("../../controller/contacts");
 const multer = require("multer");
 const path = require("path");
-const uploadDir = path.join(process.cwd(), "uploads");
-const storeImage = path.join(process.cwd(), "images");
+const uploadDir = path.join(process.cwd(), "tmp");
+const storeImage = path.join(process.cwd(), "avatars");
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
-		cb(null, uploadDir);
+		cb(null, "/tmp");
 	},
 	filename: (req, file, cb) => {
 		cb(null, file.originalname);
@@ -31,6 +31,11 @@ router.get("/users/logout", ctrlAuth.auth, ctrlAuth.logout);
 
 router.get("/users/current", ctrlAuth.auth, ctrlAuth.current);
 
-router.patch("/users/avatars", ctrlContact.avatar);
+router.patch(
+	"/users/avatars",
+	upload.single("picture"),
+	ctrlAuth.auth,
+	ctrlContact.avatar
+);
 
 module.exports = router;

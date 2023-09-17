@@ -166,20 +166,70 @@ const patch = async (req, res, next) => {
 };
 
 const avatar = async (req, res, next) => {
-	const { description } = req.body;
-	const { path: temporaryName, originalname } = req.file;
-	const fileName = path.join(storeImage, originalname);
 	try {
-		await fs.rename(temporaryName, fileName);
-	} catch (err) {
-		await fs.unlink(temporaryName);
-		return next(err);
+		console.log("test");
+		const { token } = req.user;
+		const { file } = req;
+
+		if (!file) {
+			return res.status(400).json({
+				status: "Bad Request",
+				message: "Avatar file is required.",
+			});
+		}
+
+		// Tworzenie ścieżki do folderu tmp i folderu avatars w public
+		const tmpDir = path.join(__dirname, "..", "tmp");
+		const avatarsDir = path.join(__dirname, "..", "public", "avatars");
+
+		// Tworzenie unikalnej nazwy pliku
+		const uniqueFileName = `${Date.now()}-${file.originalname}`;
+
+		// Ścieżka do tymczasowego pliku
+		const tmpFilePath = path.join(tmpDir, uniqueFileName);
+
+		// Ścieżka do docelowego pliku w folderze avatars
+		const avatarFilePath = path.join(avatarsDir, uniqueFileName);
+		console.log(tmpFilePath);
+
+		// Odczyt awatara za pomocą Jimp i przetworzenie go na wymiary 250x250
+		// console.log(await Jimp.read(file.path));
+		// const avatar = await Jimp.read(file.path);
+
+		// await avatar.resize(250, 250).quality(80);
+
+		// // Zapisz przetworzony awatar do folderu tmp
+		// await avatar.writeAsync(tmpFilePath);
+
+		// Przenieś awatar do folderu public/avatars
+		fs.renameSync(tmpFilePath, avatarFilePath);
+
+		// Aktualizuj pole avatarURL w bazie danych
+		const user = await User.findByIdAndUpdate(id, {
+			avatarURL: `/avatars/${uniqueFileName}`,
+		});
+
+		if (!user) {
+			return res.status(404).json({
+				status: "Not Found",
+				message: "User not found.",
+			});
+		}
+
+		res.status(200).json({
+			status: "success",
+			data: {
+				message: "Avatar updated successfully.",
+				avatarURL: `/avatars/${uniqueFileName}`,
+			},
+		});
+	} catch (error) {
+		res.status(500).json({
+			status: "Internal Server Error",
+			message: "Avatar update failed.",
+			error: error.message,
+		});
 	}
-	res.json({
-		description,
-		message: "Plik załadowany pomyślnie",
-		status: 200,
-	});
 };
 
 const isAccessible = (path) => {
