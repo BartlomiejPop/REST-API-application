@@ -61,4 +61,8 @@ router.patch(
 	ctrlContact.avatar
 );
 
+router.get("/users/verify/:verificationToken", ctrlAuth.verification);
+
+router.post("/users/verify", ctrlAuth.verify);
+
 module.exports = router;
