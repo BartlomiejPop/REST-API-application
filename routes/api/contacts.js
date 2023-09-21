@@ -1,25 +1,20 @@
-const express = require('express')
+const express = require("express");
+const ctrlContact = require("../../controller/contacts");
+require("dotenv").config();
+const ctrlAuth = require("../../controller/auth");
 
-const router = express.Router()
+const router = express.Router();
 
-router.get('/', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+router.get("/", ctrlAuth.auth, ctrlContact.get);
 
-router.get('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+router.get("/:id", ctrlAuth.auth, ctrlContact.getById);
 
-router.post('/', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+router.post("/", ctrlAuth.auth, ctrlContact.create);
 
-router.delete('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+router.delete("/:id", ctrlAuth.auth, ctrlContact.remove);
 
-router.put('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+router.put("/:id", ctrlAuth.auth, ctrlContact.update);
 
-module.exports = router
+router.patch("/:id/favorite", ctrlAuth.auth, ctrlContact.patch);
+
+module.exports = router;
