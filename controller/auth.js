@@ -192,8 +192,8 @@ const current = async (req, res) => {
 const verification = async (req, res, next) => {
 	const { verificationToken } = req.params;
 	const user = await User.findOne({ verificationToken });
-	console.log(user);
-	if (!user) {
+	const isVerified = user.verify;
+	if (!user || isVerified) {
 		return res.status(404).json({
 			code: 404,
 			Status: "Not Found",
@@ -202,15 +202,7 @@ const verification = async (req, res, next) => {
 			},
 		});
 	}
-	const isVerified = user.verify;
-	if (isVerified) {
-		return res.status(404).json({
-			code: 404,
-			ResponseBody: {
-				message: "User not found ",
-			},
-		});
-	}
+
 	user.verify = true;
 	await user.save();
 	return res.status(200).json({
