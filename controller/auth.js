@@ -3,37 +3,9 @@ const passport = require("../config/config-passport");
 const gravatar = require("gravatar");
 const User = require("../service/schemas/user");
 const { v4: uuidv4 } = require("uuid");
-const nodemailer = require("nodemailer");
 require("dotenv").config();
 let token;
 const secret = process.env.SECRET;
-
-const tokenDatabase = {};
-
-const transporter = nodemailer.createTransport({
-	service: "gmail",
-	auth: {
-		user: process.env.USER,
-		pass: process.env.PASSWORD,
-	},
-});
-
-const sendEmail = (to, subject, text) => {
-	const mailOptions = {
-		from: process.env.USER,
-		to,
-		subject,
-		text,
-	};
-
-	transporter.sendMail(mailOptions, (error, info) => {
-		if (error) {
-			console.error("Błąd podczas wysyłania e-maila:", error);
-		} else {
-			console.log("E-mail został wysłany:", info.response);
-		}
-	});
-};
 
 const auth = (req, res, next) => {
 	passport.authenticate("jwt", (err, user) => {
@@ -63,8 +35,6 @@ const signup = async (req, res, next) => {
 	}
 	try {
 		const verificationToken = uuidv4();
-		tokenDatabase[email] = verificationToken;
-
 		const avatarURL = gravatar.url(email, { s: "200", d: "identicon" });
 		const newUser = new User({ username, email, avatarURL, verificationToken });
 		console.log(newUser);
